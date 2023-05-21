@@ -32,7 +32,7 @@ extension Layout {
             return self
         }
         
-        func equal(
+        public func equal(
             _ view: UIView,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -57,7 +57,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func equal(
+        public func equal(
             _ anchor: NSLayoutXAxisAnchor,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -75,7 +75,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func equal(
+        public func equal(
             _ anchor: NSLayoutYAxisAnchor,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -93,7 +93,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func equal(
+        public func equal(
             _ dimension: NSLayoutAnchor<NSLayoutDimension>,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -107,7 +107,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func less(
+        public func less(
             _ view: UIView,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -132,7 +132,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func less(
+        public func less(
             _ anchor: NSLayoutXAxisAnchor,
             _ constant: CGFloat = 0)
         -> Anchor {
@@ -150,7 +150,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func less(
+        public func less(
             _ anchor: NSLayoutYAxisAnchor,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -168,7 +168,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func less(
+        public func less(
             _ dimension: NSLayoutAnchor<NSLayoutDimension>,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -182,7 +182,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func greater(
+        public func greater(
             _ view: UIView,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -207,7 +207,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func greater(
+        public func greater(
             _ anchor: NSLayoutXAxisAnchor,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -225,7 +225,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func greater(
+        public func greater(
             _ anchor: NSLayoutYAxisAnchor,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -243,7 +243,7 @@ extension Layout {
             self.constraint = .init(value: constraint)
             return self
         }
-        func greater(
+        public func greater(
             _ dimension: NSLayoutAnchor<NSLayoutDimension>,
             _ constant: CGFloat = 0
         ) -> Anchor {
@@ -258,14 +258,14 @@ extension Layout {
             return self
         }
         
-        func height(_ constant: CGFloat) -> Anchor {
+        public func height(_ constant: CGFloat) -> Anchor {
             layout.height(constant)
         }
-        func width(_ constant: CGFloat) -> Anchor {
+        public func width(_ constant: CGFloat) -> Anchor {
             layout.width(constant)
         }
         
-        func constant(_ value: CGFloat) -> Anchor {
+        public func constant(_ value: CGFloat) -> Anchor {
             let _abs: CGFloat
             switch type {
             case .bottom, .right, .trailing:
@@ -276,25 +276,25 @@ extension Layout {
             constraint?.constant = _abs
             return self
         }
-        func multiplier(_ value: CGFloat) -> Anchor {
+        public func multiplier(_ value: CGFloat) -> Anchor {
             constraint?.multiplier = value
             return self
         }
         
-        func dispose(in disposable: inout Constraint?) -> Anchor {
+        public func dispose(in disposable: inout Constraint?) -> Anchor {
             guard let constraint else { return self }
             disposable = constraint
             return self
         }
         
-        func active(_ value: Active) -> Anchor {
+        public func active(_ value: Active) -> Anchor {
             if value == .later {
                 constraint?.needActive = false
             }
             return self
         }
         
-        func activate() {
+        public func activate() {
             layout.activate()
         }
         
@@ -378,11 +378,6 @@ public class Layout {
     public init(view: UIView) {
         self.view = view
         self.view?.auto = false
-        print("Layout init")
-    }
-    
-    deinit {
-        print("Layout deinit")
     }
     
     public func height(_ constant: CGFloat) -> Anchor {
@@ -764,7 +759,7 @@ extension UIView {
     }
 }
 
-extension Array where Element == Layout.Constraint? {
+public extension Array where Element == Layout.Constraint? {
     func activate() {
         forEach { $0?.activate() }
     }
