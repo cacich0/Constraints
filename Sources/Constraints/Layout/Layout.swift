@@ -1,7 +1,103 @@
 import UIKit
 
+public protocol JustifyAnchor {
+    func left(_ constant: CGFloat) -> JustifyAnchor
+    func right(_ constant: CGFloat) -> JustifyAnchor
+    
+    func leading(_ constant: CGFloat) -> JustifyAnchor
+    func trailing(_ constant: CGFloat) -> JustifyAnchor
+    
+    func top(_ constant: CGFloat) -> JustifyAnchor
+    func bottom(_ constant: CGFloat) -> JustifyAnchor
+    
+    func centerX(_ constant: CGFloat) -> JustifyAnchor
+    func centerY(_ constant: CGFloat) -> JustifyAnchor
+    
+    func center(in view: UIView) -> Layout
+    func center() -> Layout
+    func horizontally() -> Layout.Anchor
+    func vertically() -> Layout.Anchor
+    func height(_ constant: CGFloat) -> Layout.Anchor
+    func width(_ constant: CGFloat) -> Layout.Anchor
+    func dispose(in disposable: inout Layout.Constraint?) -> Layout.Anchor
+    func active(_ value: Layout.Anchor.Active) -> Layout.Anchor
+    func activate()
+    
+    var left: Layout.Anchor { get }
+    var right: Layout.Anchor { get }
+    
+    var leading: Layout.Anchor { get }
+    var trailing: Layout.Anchor { get }
+    
+    var top: Layout.Anchor { get }
+    var bottom: Layout.Anchor { get }
+    
+    var centerX: Layout.Anchor { get }
+    var centerY: Layout.Anchor { get }
+    
+    var firstBaseline: Layout.Anchor { get }
+    var lastBaseline: Layout.Anchor { get }
+    
+    var width: Layout.Anchor { get }
+    var height: Layout.Anchor { get }
+}
+
+
+public protocol PerfectAnchor: JustifyAnchor {
+    func equal(
+        _ view: UIView,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+    func equal(
+        _ anchor: NSLayoutXAxisAnchor,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+    func equal(
+        _ anchor: NSLayoutYAxisAnchor,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+    func equal(
+        _ dimension: NSLayoutAnchor<NSLayoutDimension>,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+    
+    func less(
+        _ view: UIView,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+    func less(
+        _ anchor: NSLayoutXAxisAnchor,
+        _ constant: CGFloat)
+    -> Layout.Anchor
+    func less(
+        _ anchor: NSLayoutYAxisAnchor,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+    func less(
+        _ dimension: NSLayoutAnchor<NSLayoutDimension>,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+    
+    func greater(
+        _ view: UIView,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+    func greater(
+        _ anchor: NSLayoutXAxisAnchor,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+    func greater(
+        _ anchor: NSLayoutYAxisAnchor,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+    func greater(
+        _ dimension: NSLayoutAnchor<NSLayoutDimension>,
+        _ constant: CGFloat
+    ) -> Layout.Anchor
+}
+
 extension Layout {
-    public class Anchor {
+    public class Anchor: PerfectAnchor {
         fileprivate var layout: Layout
         
         fileprivate var type: List
@@ -30,6 +126,56 @@ extension Layout {
             guard let constraint else { return self }
             self.constraint = .init(value: constraint)
             return self
+        }
+        
+        public func center(in view: UIView) -> Layout {
+            let _ = layout.centerX.equal(view)
+            let _ = layout.centerY.equal(view)
+            return layout
+        }
+        public func center() -> Layout {
+            guard let superview = view?.superview else {
+                return layout
+            }
+            
+            let _ = layout.centerX.equal(superview)
+            let _ = layout.centerY.equal(superview)
+            
+            return layout
+        }
+        public func horizontally() -> Anchor {
+            layout.horizontally()
+        }
+        public func vertically() -> Anchor {
+            layout.vertically()
+        }
+        
+        public func left(_ constant: CGFloat = 0) -> JustifyAnchor {
+            return layout.left(constant)
+        }
+        public func right(_ constant: CGFloat = 0) -> JustifyAnchor {
+            return layout.right(constant)
+        }
+        
+        public func leading(_ constant: CGFloat = 0) -> JustifyAnchor {
+            return layout.leading(constant)
+        }
+        public func trailing(_ constant: CGFloat = 0) -> JustifyAnchor {
+            return layout.trailing(constant)
+        }
+        
+        public func top(_ constant: CGFloat = 0) -> JustifyAnchor {
+            return layout.top(constant)
+        }
+        public func bottom(_ constant: CGFloat = 0) -> JustifyAnchor {
+            return layout.bottom(constant)
+        }
+        
+        public func centerX(_ constant: CGFloat = 0) -> JustifyAnchor {
+            return layout.centerX(constant)
+        }
+        public func centerY(_ constant: CGFloat = 0) -> JustifyAnchor {
+            return layout.centerY(constant)
         }
         
         public func equal(
@@ -435,6 +581,22 @@ public class Layout {
         let _ = bottom.equal(safeAreaIgnore ? view.bottom: view.safeBottom, insets.bottom)
         return self
     }
+    public func box(insets: UIEdgeInsets = .zero, safeAreaIgnore: Bool = false) -> Layout {
+        guard let anchors,
+              let leading = anchors.first(where: { $0.type == .leading }),
+              let trailing = anchors.first(where: { $0.type == .trailing }),
+              let top = anchors.first(where: { $0.type == .top }),
+              let bottom = anchors.first(where: { $0.type == .bottom }),
+              let superview = view?.superview
+        else {
+            return self
+        }
+        let _ = leading.equal(superview, insets.left)
+        let _ = trailing.equal(superview, insets.right)
+        let _ = top.equal(safeAreaIgnore ? superview.top : superview.safeTop, insets.top)
+        let _ = bottom.equal(safeAreaIgnore ? superview.bottom: superview.safeBottom, insets.bottom)
+        return self
+    }
     public func center(in view: UIView) -> Layout {
         guard let anchors,
               let centerX = anchors.first(where: { $0.type == .centerX }),
@@ -445,6 +607,133 @@ public class Layout {
         let _ = centerX.equal(view)
         let _ = centerY.equal(view)
         return self
+    }
+    public func center() -> Anchor {
+        guard let anchors,
+              let centerX = anchors.first(where: { $0.type == .centerX }),
+              let centerY = anchors.first(where: { $0.type == .centerY }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .centerY)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        let _ = centerX.equal(superview)
+        return centerY.equal(superview)
+    }
+    public func horizontally() -> Anchor {
+        guard let anchors,
+              let centerX = anchors.first(where: { $0.type == .centerX }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .centerX)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        return centerX.equal(superview)
+    }
+    public func vertically() -> Anchor {
+        guard let anchors,
+              let centerY = anchors.first(where: { $0.type == .centerY }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .centerY)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        return centerY.equal(superview)
+    }
+    
+    public func left(_ constant: CGFloat = 0) -> JustifyAnchor {
+        guard let anchors,
+              let anchor = anchors.first(where: { $0.type == .left }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .left)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        return anchor.equal(superview, constant)
+    }
+    public func right(_ constant: CGFloat = 0) -> JustifyAnchor {
+        guard let anchors,
+              let anchor = anchors.first(where: { $0.type == .right }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .right)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        return anchor.equal(superview, constant)
+    }
+    
+    public func leading(_ constant: CGFloat = 0) -> JustifyAnchor {
+        guard let anchors,
+              let anchor = anchors.first(where: { $0.type == .leading }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .leading)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        return anchor.equal(superview, constant)
+    }
+    public func trailing(_ constant: CGFloat = 0) -> JustifyAnchor {
+        guard let anchors,
+              let anchor = anchors.first(where: { $0.type == .trailing }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .trailing)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        return anchor.equal(superview, constant)
+    }
+    
+    public func top(_ constant: CGFloat = 0) -> JustifyAnchor {
+        guard let anchors,
+              let anchor = anchors.first(where: { $0.type == .top }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .top)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        return anchor.equal(superview, constant)
+    }
+    public func bottom(_ constant: CGFloat = 0) -> JustifyAnchor {
+        guard let anchors,
+              let anchor = anchors.first(where: { $0.type == .bottom }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .bottom)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        return anchor.equal(superview, constant)
+    }
+    
+    public func centerX(_ constant: CGFloat = 0) -> JustifyAnchor {
+        guard let anchors,
+              let anchor = anchors.first(where: { $0.type == .centerX }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .centerX)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        return anchor.equal(superview, constant)
+    }
+    public func centerY(_ constant: CGFloat = 0) -> JustifyAnchor {
+        guard let anchors,
+              let anchor = anchors.first(where: { $0.type == .centerY }),
+              let superview = view?.superview else {
+            let anchor = Anchor(layout: self, type: .centerY)
+            anchors?.append(anchor)
+            return anchor
+        }
+        
+        return anchor.equal(superview, constant)
     }
     
     public var left: Anchor {
