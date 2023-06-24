@@ -967,14 +967,24 @@ extension Layout.Constraint {
 
 extension NSLayoutConstraint {
     fileprivate func multiplier(_ value: CGFloat) -> NSLayoutConstraint? {
-        guard let item = firstItem else { return nil }
-        return NSLayoutConstraint(item: item,
-                                  attribute: firstAttribute,
-                                  relatedBy: relation,
-                                  toItem: secondItem,
-                                  attribute: secondAttribute,
-                                  multiplier: value,
-                                  constant: constant)
+        guard let firstItem else { return nil }
+        let newConstraint = NSLayoutConstraint(
+            item: firstItem,
+            attribute: firstAttribute,
+            relatedBy: relation,
+            toItem: secondItem,
+            attribute: secondAttribute,
+            multiplier: multiplier,
+            constant: constant)
+        
+        newConstraint.priority = priority
+        newConstraint.shouldBeArchived = self.shouldBeArchived
+        newConstraint.identifier = self.identifier
+        newConstraint.isActive = true
+        
+        NSLayoutConstraint.deactivate([self])
+        NSLayoutConstraint.activate([newConstraint])
+        return newConstraint
     }
     fileprivate func replaceItem(
         _ new: UIView,
