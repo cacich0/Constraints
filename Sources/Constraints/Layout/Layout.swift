@@ -874,7 +874,6 @@ extension Layout {
                     (value.firstItem as? UIView)?.removeConstraint(value)
                     (value.firstItem as? UIView)?.addConstraint(new)
                     value = new
-                    active = true
                 }
             }
         }
