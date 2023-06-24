@@ -872,6 +872,7 @@ extension Layout {
             set {
                 if let new = value.multiplier(newValue) {
                     value = new
+                    active = true
                 }
             }
         }
