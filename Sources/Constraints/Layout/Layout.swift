@@ -871,9 +871,9 @@ extension Layout {
             get { value.multiplier }
             set {
                 if let new = value.multiplier(newValue) {
-                    value = new
                     (value.firstItem as? UIView)?.removeConstraint(value)
                     (value.firstItem as? UIView)?.addConstraint(new)
+                    value = new
                     active = true
                 }
             }
