@@ -974,7 +974,7 @@ extension NSLayoutConstraint {
             relatedBy: relation,
             toItem: secondItem,
             attribute: secondAttribute,
-            multiplier: multiplier,
+            multiplier: value,
             constant: constant)
         
         newConstraint.priority = priority
