@@ -1,101 +1,5 @@
 import UIKit
 
-//public protocol JustifyAnchor {
-//    func left(_ constant: CGFloat) -> JustifyAnchor
-//    func right(_ constant: CGFloat) -> JustifyAnchor
-//
-//    func leading(_ constant: CGFloat) -> JustifyAnchor
-//    func trailing(_ constant: CGFloat) -> JustifyAnchor
-//
-//    func top(_ constant: CGFloat) -> JustifyAnchor
-//    func bottom(_ constant: CGFloat) -> JustifyAnchor
-//
-//    func centerX(_ constant: CGFloat) -> JustifyAnchor
-//    func centerY(_ constant: CGFloat) -> JustifyAnchor
-//
-//    func center(in view: UIView) -> Layout
-//    func center() -> Layout
-//    func horizontally() -> Layout.Anchor
-//    func vertically() -> Layout.Anchor
-//    func height(_ constant: CGFloat) -> Layout.Anchor
-//    func width(_ constant: CGFloat) -> Layout.Anchor
-//    func dispose(in disposable: inout Layout.Constraint?) -> Layout.Anchor
-//    func active(_ value: Layout.Anchor.Active) -> Layout.Anchor
-//    func activate()
-//
-//    var left: Layout.Anchor { get }
-//    var right: Layout.Anchor { get }
-//
-//    var leading: Layout.Anchor { get }
-//    var trailing: Layout.Anchor { get }
-//
-//    var top: Layout.Anchor { get }
-//    var bottom: Layout.Anchor { get }
-//
-//    var centerX: Layout.Anchor { get }
-//    var centerY: Layout.Anchor { get }
-//
-//    var firstBaseline: Layout.Anchor { get }
-//    var lastBaseline: Layout.Anchor { get }
-//
-//    var width: Layout.Anchor { get }
-//    var height: Layout.Anchor { get }
-//}
-//
-//
-//public protocol PerfectAnchor: JustifyAnchor {
-//    func equal(
-//        _ view: UIView,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//    func equal(
-//        _ anchor: NSLayoutXAxisAnchor,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//    func equal(
-//        _ anchor: NSLayoutYAxisAnchor,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//    func equal(
-//        _ dimension: NSLayoutAnchor<NSLayoutDimension>,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//
-//    func less(
-//        _ view: UIView,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//    func less(
-//        _ anchor: NSLayoutXAxisAnchor,
-//        _ constant: CGFloat)
-//    -> Layout.Anchor
-//    func less(
-//        _ anchor: NSLayoutYAxisAnchor,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//    func less(
-//        _ dimension: NSLayoutAnchor<NSLayoutDimension>,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//
-//    func greater(
-//        _ view: UIView,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//    func greater(
-//        _ anchor: NSLayoutXAxisAnchor,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//    func greater(
-//        _ anchor: NSLayoutYAxisAnchor,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//    func greater(
-//        _ dimension: NSLayoutAnchor<NSLayoutDimension>,
-//        _ constant: CGFloat
-//    ) -> Layout.Anchor
-//}
-
 extension Layout {
     public class Anchor {
         fileprivate var layout: Layout
@@ -495,7 +399,7 @@ extension Layout.Anchor {
         case later
     }
     
-    fileprivate enum List: CaseIterable {
+    fileprivate enum List: CaseIterable, Hashable {
         case left
         case right
         
@@ -519,7 +423,12 @@ extension Layout.Anchor {
 public class Layout {
     fileprivate var view: UIView?
     
-    private lazy var anchors: [Anchor]? = Anchor.List.allCases.map { Anchor(layout: self, type: $0) }
+    private lazy var anchors: [Anchor.List: Anchor]? = Anchor.List.allCases
+        .reduce([Anchor.List: Anchor]()) {
+            var dictionary = $0
+            dictionary[$1] = Anchor(layout: self, type: $1)
+            return dictionary
+    }
     
     public init(view: UIView) {
         self.view = view
@@ -528,26 +437,26 @@ public class Layout {
     
     public func height(_ constant: CGFloat) -> Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .height }) else {
+              let anchor = anchors[.height] else {
             let anchor = Anchor(layout: self, type: .height)
-            anchors?.append(anchor)
+            anchors?[.height] = anchor
             return anchor
         }
         return anchor._height(constant)
     }
     public func width(_ constant: CGFloat) -> Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .width }) else {
+              let anchor = anchors[.width] else {
             let anchor = Anchor(layout: self, type: .width)
-            anchors?.append(anchor)
+            anchors?[.width] = anchor
             return anchor
         }
         return anchor._width(constant)
     }
     public func size(_ constant: CGFloat) -> Layout {
         guard let anchors,
-              let width = anchors.first(where: { $0.type == .width }),
-              let height = anchors.first(where: { $0.type == .height })
+              let width = anchors[.width],
+              let height = anchors[.height]
         else {
             return self
         }
@@ -557,8 +466,8 @@ public class Layout {
     }
     public func size(w: CGFloat, h: CGFloat) -> Layout {
         guard let anchors,
-              let width = anchors.first(where: { $0.type == .width }),
-              let height = anchors.first(where: { $0.type == .height })
+              let width = anchors[.width],
+              let height = anchors[.height]
         else {
             return self
         }
@@ -568,10 +477,10 @@ public class Layout {
     }
     public func box(in view: UIView, insets: UIEdgeInsets = .zero, safeAreaIgnore: Bool = false) -> Layout {
         guard let anchors,
-              let leading = anchors.first(where: { $0.type == .leading }),
-              let trailing = anchors.first(where: { $0.type == .trailing }),
-              let top = anchors.first(where: { $0.type == .top }),
-              let bottom = anchors.first(where: { $0.type == .bottom })
+              let leading = anchors[.leading],
+              let trailing = anchors[.trailing],
+              let top = anchors[.top],
+              let bottom = anchors[.bottom]
         else {
             return self
         }
@@ -583,10 +492,10 @@ public class Layout {
     }
     public func box(insets: UIEdgeInsets = .zero, safeAreaIgnore: Bool = false) -> Layout {
         guard let anchors,
-              let leading = anchors.first(where: { $0.type == .leading }),
-              let trailing = anchors.first(where: { $0.type == .trailing }),
-              let top = anchors.first(where: { $0.type == .top }),
-              let bottom = anchors.first(where: { $0.type == .bottom }),
+              let leading = anchors[.leading],
+              let trailing = anchors[.trailing],
+              let top = anchors[.top],
+              let bottom = anchors[.bottom],
               let superview = view?.superview
         else {
             return self
@@ -599,8 +508,8 @@ public class Layout {
     }
     public func center(in view: UIView) -> Layout {
         guard let anchors,
-              let centerX = anchors.first(where: { $0.type == .centerX }),
-              let centerY = anchors.first(where: { $0.type == .centerY })
+              let centerX = anchors[.centerX],
+              let centerY = anchors[.centerY]
         else {
             return self
         }
@@ -610,11 +519,11 @@ public class Layout {
     }
     public func center() -> Anchor {
         guard let anchors,
-              let centerX = anchors.first(where: { $0.type == .centerX }),
-              let centerY = anchors.first(where: { $0.type == .centerY }),
+              let centerX = anchors[.centerX],
+              let centerY = anchors[.centerY],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .centerY)
-            anchors?.append(anchor)
+            anchors?[.centerY] = anchor
             return anchor
         }
         
@@ -623,10 +532,10 @@ public class Layout {
     }
     public func horizontally() -> Anchor {
         guard let anchors,
-              let centerX = anchors.first(where: { $0.type == .centerX }),
+              let centerX = anchors[.centerX],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .centerX)
-            anchors?.append(anchor)
+            anchors?[.centerX] = anchor
             return anchor
         }
         
@@ -634,10 +543,10 @@ public class Layout {
     }
     public func vertically() -> Anchor {
         guard let anchors,
-              let centerY = anchors.first(where: { $0.type == .centerY }),
+              let centerY = anchors[.centerY],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .centerY)
-            anchors?.append(anchor)
+            anchors?[.centerY] = anchor
             return anchor
         }
         
@@ -646,10 +555,10 @@ public class Layout {
     
     public func left(_ constant: CGFloat = 0) -> Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .left }),
+              let anchor = anchors[.left],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .left)
-            anchors?.append(anchor)
+            anchors?[.left] = anchor
             return anchor
         }
         
@@ -657,10 +566,10 @@ public class Layout {
     }
     public func right(_ constant: CGFloat = 0) -> Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .right }),
+              let anchor = anchors[.right],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .right)
-            anchors?.append(anchor)
+            anchors?[.right] = anchor
             return anchor
         }
         
@@ -669,10 +578,10 @@ public class Layout {
     
     public func leading(_ constant: CGFloat = 0) -> Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .leading }),
+              let anchor = anchors[.leading],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .leading)
-            anchors?.append(anchor)
+            anchors?[.leading] = anchor
             return anchor
         }
         
@@ -680,10 +589,10 @@ public class Layout {
     }
     public func trailing(_ constant: CGFloat = 0) -> Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .trailing }),
+              let anchor = anchors[.trailing],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .trailing)
-            anchors?.append(anchor)
+            anchors?[.trailing] = anchor
             return anchor
         }
         
@@ -692,10 +601,10 @@ public class Layout {
     
     public func top(_ constant: CGFloat = 0) -> Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .top }),
+              let anchor = anchors[.top],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .top)
-            anchors?.append(anchor)
+            anchors?[.top] = anchor
             return anchor
         }
         
@@ -703,10 +612,10 @@ public class Layout {
     }
     public func bottom(_ constant: CGFloat = 0) -> Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .bottom }),
+              let anchor = anchors[.bottom],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .bottom)
-            anchors?.append(anchor)
+            anchors?[.bottom] = anchor
             return anchor
         }
         
@@ -715,10 +624,10 @@ public class Layout {
     
     public func centerX(_ constant: CGFloat = 0) -> Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .centerX }),
+              let anchor = anchors[.centerX],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .centerX)
-            anchors?.append(anchor)
+            anchors?[.centerX] = anchor
             return anchor
         }
         
@@ -726,10 +635,10 @@ public class Layout {
     }
     public func centerY(_ constant: CGFloat = 0) -> Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .centerY }),
+              let anchor = anchors[.centerY],
               let superview = view?.superview else {
             let anchor = Anchor(layout: self, type: .centerY)
-            anchors?.append(anchor)
+            anchors?[.centerY] = anchor
             return anchor
         }
         
@@ -738,18 +647,18 @@ public class Layout {
     
     public var left: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .left }) else {
+              let anchor = anchors[.left] else {
             let anchor = Anchor(layout: self, type: .left)
-            anchors?.append(anchor)
+            anchors?[.left] = anchor
             return anchor
         }
         return anchor
     }
     public var right: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .right }) else {
+              let anchor = anchors[.right] else {
             let anchor = Anchor(layout: self, type: .right)
-            anchors?.append(anchor)
+            anchors?[.right] = anchor
             return anchor
         }
         return anchor
@@ -757,18 +666,18 @@ public class Layout {
     
     public var leading: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .leading }) else {
+              let anchor = anchors[.leading] else {
             let anchor = Anchor(layout: self, type: .leading)
-            anchors?.append(anchor)
+            anchors?[.leading] = anchor
             return anchor
         }
         return anchor
     }
     public var trailing: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .trailing }) else {
+              let anchor = anchors[.trailing] else {
             let anchor = Anchor(layout: self, type: .trailing)
-            anchors?.append(anchor)
+            anchors?[.trailing] = anchor
             return anchor
         }
         return anchor
@@ -776,18 +685,18 @@ public class Layout {
     
     public var top: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .top }) else {
+              let anchor = anchors[.top] else {
             let anchor = Anchor(layout: self, type: .top)
-            anchors?.append(anchor)
+            anchors?[.top] = anchor
             return anchor
         }
         return anchor
     }
     public var bottom: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .bottom }) else {
+              let anchor = anchors[.bottom] else {
             let anchor = Anchor(layout: self, type: .bottom)
-            anchors?.append(anchor)
+            anchors?[.bottom] = anchor
             return anchor
         }
         return anchor
@@ -795,18 +704,18 @@ public class Layout {
     
     public var firstBaseline: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .firstBaseline }) else {
+              let anchor = anchors[.firstBaseline] else {
             let anchor = Anchor(layout: self, type: .firstBaseline)
-            anchors?.append(anchor)
+            anchors?[.firstBaseline] = anchor
             return anchor
         }
         return anchor
     }
     public var lastBaseline: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .lastBaseline }) else {
+              let anchor = anchors[.lastBaseline] else {
             let anchor = Anchor(layout: self, type: .lastBaseline)
-            anchors?.append(anchor)
+            anchors?[.lastBaseline] = anchor
             return anchor
         }
         return anchor
@@ -814,18 +723,18 @@ public class Layout {
     
     public var centerX: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .centerX }) else {
+              let anchor = anchors[.centerX] else {
             let anchor = Anchor(layout: self, type: .centerX)
-            anchors?.append(anchor)
+            anchors?[.centerX] = anchor
             return anchor
         }
         return anchor
     }
     public var centerY: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .centerY }) else {
+              let anchor = anchors[.centerY]  else {
             let anchor = Anchor(layout: self, type: .centerY)
-            anchors?.append(anchor)
+            anchors?[.centerY] = anchor
             return anchor
         }
         return anchor
@@ -833,25 +742,25 @@ public class Layout {
     
     public var width: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .width }) else {
+              let anchor = anchors[.width] else {
             let anchor = Anchor(layout: self, type: .width)
-            anchors?.append(anchor)
+            anchors?[.width] = anchor
             return anchor
         }
         return anchor
     }
     public var height: Anchor {
         guard let anchors,
-              let anchor = anchors.first(where: { $0.type == .height }) else {
+              let anchor = anchors[.height] else {
             let anchor = Anchor(layout: self, type: .height)
-            anchors?.append(anchor)
+            anchors?[.height] = anchor
             return anchor
         }
         return anchor
     }
     
     public func activate() {
-        anchors?
+        anchors?.values
             .filter { $0.constraint?.needActive ?? false }
             .forEach {
                 $0.active()
@@ -1057,17 +966,3 @@ extension UIView {
         self.auto = true
     }
 }
-
-public extension Array where Element == Layout.Constraint? {
-    func activate() {
-        forEach { $0?.activate() }
-    }
-    
-    func activate(
-        with animation: Layout.Constraint.Animation,
-        completion: ((Bool) -> Void)? = nil
-    ) {
-        forEach { $0?.activate(with: animation, completion: completion) }
-    }
-}
-
